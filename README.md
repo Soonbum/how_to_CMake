@@ -41,7 +41,9 @@ ADD_EXECUTABLE( app.out main.c foo.c bar.c )
 
 위와 같이 작성하고 Makefile을 생성하려면 다음 명령을 실행합니다.
 
-`cmake CMakeLists.txt`
+```
+cmake CMakeLists.txt
+```
 
 'cmake CMakeLists.txt' 명령은 자동 생성된 Makefile을 삭제하지 않는 한 최초 한 번만 실행해 주면 됩니다. 생성된 Makefile을 실행할 때 CMakeLists.txt 파일의 변경 여부를 검사해서 필요한 경우 Makefile을 자동으로 재생성해 줍니다.
 
@@ -74,5 +76,11 @@ make 명령으로 CMake로 생성한 Makefile을 실행하면 가장 먼저 CMak
 main.c.o:
 $(MAKE) -f CMakeFiles/app.out.dir/build.make CMakeFiles/app.out.dir/main.c.o
 ```
+
+## CMakeLists.txt 작성하는 방법
+
+여기에서 다루지 않은 구문들은 [CMake 2.8.12 문서](https://cmake.org/cmake/help/v2.8.12/cmake.html)를 참조하십시오.
+
+### SET(): 변수 정의
 
 ...
