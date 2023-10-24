@@ -1,10 +1,8 @@
 # CMake 사용법
 
-[참조 자료 1](https://www.tuwlab.com/ece/27234)
-
-[참조 자료 2](https://www.tuwlab.com/ece/27260)
-
-[참조 자료 3](https://www.tuwlab.com/ece/27270)
+* [참조 자료 1](https://www.tuwlab.com/ece/27234)
+* [참조 자료 2](https://www.tuwlab.com/ece/27260)
+* [참조 자료 3](https://www.tuwlab.com/ece/27270)
 
 CMake를 사용하면 의존성 정보를 일일이 기술해 주지 않아도 되므로 빌드 스크립트의 관리 측면에서 매우 효율적입니다. 프로젝트를 처음 시작할 때 Build Step만 잘 구성해 놓으면, 이후에는 소스 파일(*.c)을 처음 추가할 때만 CMakeLists.txt 파일을 열어서 등록해 주면 됩니다. 이후에는 소스코드를 어떻게 수정하더라도 빌드에서 제외하지 않는 한 스크립트를 수정하지 않아도 됩니다.
 
@@ -219,23 +217,78 @@ INSTALL (TARGETS <Target목록>
 * 라이브러리 출력 디렉토리: `LIBRARY_OUTPUT_DIRECTORY`
   - 빌드 완료한 라이브러리를 저장할 디렉토리를 지정합니다.
 
-* 아카이브 출력 디렉토리
+* 아카이브 출력 디렉토리: `ARCHIVE_OUTPUT_DIRECTORY`
   - 빌드 완료한 아카이브(Static 라이브러리)를 저장할 디렉토리를 지정합니다.
 
 ## 특정 대상(Target) 한정 빌드 설정 관련
 
-* Target 컴파일 옵션 추가
+다음은 특정 Target에 한정해서 빌드 옵션을 지정하는 명령들입니다. 최종 생성 Target이 여러 개이고, Target마다 빌드 옵션을 서로 다르게 지정해야 할 필요가 있을 경우 사용합니다.
+이 단락에서 소개하는 명령들은 모두 'TARGET_'으로 시작하고, 첫 번째 인수는 Target 이름입니다. 이 명령들을 선언하기 전에 대상 Target은 반드시 미리 선언되어 있어야 합니다.
 
-* Target 전처리기 매크로 정의 (-D)
+* Target 컴파일 옵션 추가: `TARGET_COMPILE_OPTIONS (<Target이름> PUBLIC <옵션> <옵션> ...)`
+  - <Target이름>: Target 이름
+  - PUBLIC: 전역 컴파일 옵션 변수(COMPILE_OPTIONS)와 인터페이스 컴파일 옵션 변수(INTERFACE_COMPILE_OPTIONS)를 확장합니다. 보통의 경우 PUBLIC으로 두면 됩니다. (그 외 가능한 값으로 INTERFACE와 PRIVATE이 있으며, 자세한 설명은 [공식 매뉴얼](https://cmake.org/cmake/help/v2.8.12/cmake.html#command:target_compile_options)을 참조하세요)
+  - <옵션>: 컴파일 옵션
 
-* Target 헤더 디렉토리 추가 (-I)
+* Target 전처리기 매크로 정의 (-D): `TARGET_COMPILE_DEFINITIONS (<Target이름> PUBLIC <매크로> <매크로> <매크로>=<값> ...)`
+  - Target의 소스 파일을 컴파일하여 Object 파일을 생성할 때 전처리기에 전달할 매크로를 정의합니다.
+  - 컴파일러 옵션 중 -D에 해당합니다.
+  - ADD_DEFINITIONS()와는 달리, <매크로>를 지정할 때 선행 -D는 생략 가능합니다. 즉, <매크로>가 '-D'으로 시작하는 경우 컴파일 명령에 그대로 포함되고, 그렇지 않은 경우 -D가 자동으로 추가됩니다.
 
-* Target 링크 옵션 및 라이브러리 지정 (-l)
+* Target 헤더 디렉토리 추가 (-I): `TARGET_INCLUDE_DIRECTORIES (<Target이름> PUBLIC <디렉토리> <디렉토리> ...)`
+  - Target에 포함된 소스 파일에서 #include 구문으로 포함시킨 헤더 파일을 찾을 디렉토리 목록을 추가합니다.
+  - 컴파일러 옵션 중 -I에 해당합니다.
+
+* Target 링크 옵션 및 라이브러리 지정 (-l): `TARGET_LINK_LIBRARIES (<Target이름> <라이브러리> <라이브러리> ...)`
+  - Target 링크시 포함할 라이브러리 목록을 지정합니다. 이 때, 라이브러리 파일명의 Prefix 및 Postfix는 제외하고 라이브러리 이름만 입력합니다. (e.g. libxxx.a에서 xxx에 해당하는 부분만 입력)
+  - 컴파일러 옵션 중 -l에 해당합니다.
+  - 이 명령으로 링크 옵션도 함께 지정할 수 있습니다. <라이브러리> 값이 하이픈('-')으로 시작하는 경우 링크 명령에 그대로 포함되고, 그렇지 않은 경우 앞에 '-l'이 자동으로 추가됩니다.
 
 ## 빌드 절차(Step) 관련
 
-* 템플릿 파일로부터 파일 자동 생성
+* 템플릿 파일로부터 파일 자동 생성: `CONFIGURE_FILE (<템플릿_파일명> <출력_파일명>)`
+  - 빌드 시작 직전에 템플릿 파일 내용 중 빌드 스크립트에 정의된 변수를 치환해서 출력 파일로 작성합니다. 컴파일러를 실행하기 전에 수행하는 '전전처리' 과정이라 할 수 있습니다.
+  - 템플릿 파일 내용 중 ${<변수명>} 또는 @<변수명>@이 모두 변수 값으로 치환되어 출력 파일로 저장됩니다.
+  - 이 명령은 주로 프로그램의 버전을 명시하는 헤더 파일을 빌드 직전에 자동 생성해야 하는 경우 사용합니다. 이렇게 하면 프로그램 내에 버전을 명시할 때 헤더 파일을 수정하는 대신 빌드 스크립트에서 일괄 관리할 수 있으므로 편리합니다.
 
-* 사용자 정의 출력 파일 추가
+* 사용자 정의 출력 파일 추가: `ADD_CUSTOM_COMMAND (OUTPUT)`
+  - 통상적인 빌드 절차로 생성할 수 없는 출력 파일을 추가합니다. 출력 파일의 Recipe를 직접 지정해야 하는 경우 유용하게 활용할 수 있습니다.
+  - 사용자 정의 Target을 추가하는 명령인 ADD_CUSTOM_TARGET() 명령과의 차이점은 다음과 같습니다.
+    * 생성하는 출력 파일들이 최신인지 여부를 검사해서 명령(Recipe)을 실행할지 여부를 결정합니다. 따라서, 사용자 정의 출력 파일을 생성하는 데 많은 시간이 걸리는 경우 사용하면 유용합니다.
+    * 명령(Recipe)을 실행했을 때 최소 한 개 이상의 출력 파일이 있어야 하며, Outdated 판정을 위해 출력 파일을 OUTPUT 인수로 명시해야 합니다. 
+```
+ADD_CUSTOM_COMMAND (
+                OUTPUT <출력파일목록>
+                [COMMENT <출력메시지>]
+                [DEPENDS <의존대상목록>]
+                [WORKING_DIRECTORY <작업디렉토리>]
+                COMMAND <명령>
+                [COMMAND <명령>]
+                [VERBATIM]
+                ...
+)
+```
 
-* 빌드 과정 명령 추가
+* 빌드 과정 명령 추가: `ADD_CUSTOM_COMMAND (TARGET)`
+  - 특정 Target의 빌드 전(Pre-build)/중(Pre-link)/후(Post-build)에 수행할 명령을 추가합니다.
+  - ELF파일로부터 임베디드 프로세서에 Flashing하기 위한 BIN파일을 생성하는 것과 같이 통상적인 빌드 과정에서 수행되는 명령으로는 처리할 수 없는 동작을 빌드 대상물에 수행해 줘야 할 필요가 있을 경우 사용합니다.
+  - ADD_CUSTOM_COMMAND(OUTPUT)에서 제시한 예시에서는 OUTPUT에 지정한 파일들이 Outdated인 경우에만 실행되지만, 여기에서는 출력물의 최신 여부에 관계 없이 TARGET에 지정한 대상 Target이 빌드되는 경우에만 실행됩니다.
+  - <Target이름> : 여기 지정한 Target의 빌드 과정을 대상으로 합니다.
+  - <PRE_BUILD|PRE_LINK|POST_BUILD> : 명령 실행 시점
+```
+
+ADD_CUSTOM_COMMAND (
+                TARGET <Target이름>
+                <PRE_BUILD|PRE_LINK|POST_BUILD>
+                [COMMENT <출력메시지>]
+                [WORKING_DIRECTORY <작업디렉토리>]
+                COMMAND <명령>
+                [COMMAND <명령>]
+                [VERBATIM]
+                ...
+)
+```
+
+## CMakeLists.txt 빌드 스크립트의 기본 패턴
+
+...
