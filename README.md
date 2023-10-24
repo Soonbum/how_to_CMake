@@ -291,4 +291,119 @@ ADD_CUSTOM_COMMAND (
 
 ## CMakeLists.txt 빌드 스크립트의 기본 패턴
 
-...
+빌드 결과물이 실행 바이너리 1개인 C 프로젝트를 관리하는 CMake 빌드 스크립트이며, 소스 파일 목록과 빌드 형상(Configuration)별 컴파일·링크 플래그, 링크 라이브러리를 관리할 수 있습니다.
+다음은 CMake 빌드 스크립트의 기본 패턴입니다. <...>로 표시한 부분만 적절히 수정하면 C 프로젝트 빌드 스크립트로 활용할 수 있습니다.
+
+```
+# 요구 CMake 최소 버전
+CMAKE_MINIMUM_REQUIRED ( VERSION <버전> )
+ 
+# 프로젝트 이름 및 버전
+PROJECT ( "<프로젝트_이름>" )
+SET ( PROJECT_VERSION_MAJOR <주_버전> )
+SET ( PROJECT_VERSION_MINOR <부_버전> )
+ 
+# 빌드 형상(Configuration) 및 주절주절 Makefile 생성 여부
+SET ( CMAKE_BUILD_TYPE <Debug|Release> )
+SET ( CMAKE_VERBOSE_MAKEFILE <true|false> )
+ 
+# 빌드 대상 바이너리 파일명 및 소스파일 목록
+SET ( OUTPUT_ELF
+        "${CMAKE_PROJECT_NAME}-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.out"
+        )
+SET ( SRC_FILES
+        <소스_파일>
+        <소스_파일>
+        ...
+        )
+ 
+# 공통 컴파일러
+SET ( CMAKE_C_COMPILER "<컴파일러>" )
+ 
+# 공통 헤더 파일 Include 디렉토리 (-I)
+INCLUDE_DIRECTORIES ( <디렉토리> <디렉토리> ... )
+ 
+# 공통 컴파일 옵션, 링크 옵션
+ADD_COMPILE_OPTIONS ( <컴파일_옵션> <컴파일_옵션> ... )
+SET ( CMAKE_EXE_LINKER_FLAGS "<링크_옵션> <링크_옵션> ..." )
+ 
+# 공통 링크 라이브러리 (-l)
+LINK_LIBRARIES( <라이브러리> <라이브러리> ... )
+ 
+# 공통 링크 라이브러리 디렉토리 (-L)
+LINK_DIRECTORIES ( <디렉토리> <디렉토리> ... )
+ 
+# "Debug" 형상 한정 컴파일 옵션, 링크 옵션
+SET ( CMAKE_C_FLAGS_DEBUG "<컴파일_옵션> <컴파일_옵션> ..." )
+SET ( CMAKE_EXE_LINKER_FLAGS_DEBUG "<링크_옵션> <링크_옵션> ..." )
+ 
+# "Release" 형상 한정 컴파일 옵션, 링크 옵션
+SET ( CMAKE_C_FLAGS_RELEASE "<컴파일_옵션> <컴파일_옵션> ..." )
+SET ( CMAKE_EXE_LINKER_FLAGS_RELEASE "<링크_옵션> <링크_옵션> ..." )
+ 
+# 출력 디렉토리
+SET ( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BUILD_TYPE} )
+SET ( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BUILD_TYPE}/lib )
+SET ( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BUILD_TYPE}/lib )
+ 
+# 빌드 대상 바이너리 추가
+ADD_EXECUTABLE( ${OUTPUT_ELF} ${SRC_FILES} )
+```
+
+다음 빌드 스크립트는 main.c, foo.c, bar.c 세 개의 파일로 구성된 C 프로젝트를 빌드하기 위한 CMake 빌드 스크립트입니다.
+
+```
+# 요구 CMake 최소 버전
+CMAKE_MINIMUM_REQUIRED ( VERSION 2.8 )
+ 
+# 프로젝트 이름 및 버전
+PROJECT ( "andromeda" )
+SET ( PROJECT_VERSION_MAJOR 0 )
+SET ( PROJECT_VERSION_MINOR 1 )
+ 
+# 빌드 형상(Configuration) 및 주절주절 Makefile 생성 여부
+SET ( CMAKE_BUILD_TYPE Debug )
+SET ( CMAKE_VERBOSE_MAKEFILE true )
+ 
+# 빌드 대상 바이너리 파일명 및 소스 파일 목록
+SET ( OUTPUT_ELF
+        "${CMAKE_PROJECT_NAME}-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.out"
+        )
+SET ( SRC_FILES
+        bar.c
+        foo.c
+        main.c
+        )
+ 
+# 공통 컴파일러
+SET ( CMAKE_C_COMPILER "gcc" )
+ 
+# 공통 헤더 파일 Include 디렉토리 (-I)
+INCLUDE_DIRECTORIES ( include driver/include )
+ 
+# 공통 컴파일 옵션, 링크 옵션
+ADD_COMPILE_OPTIONS ( -g -Wall )
+SET ( CMAKE_EXE_LINKER_FLAGS "-static -Wl,--gc-sections" )
+ 
+# 공통 링크 라이브러리 (-l)
+LINK_LIBRARIES( uart andromeda )
+ 
+# 공통 링크 라이브러리 디렉토리 (-L)
+LINK_DIRECTORIES ( /usr/lib )
+ 
+# "Debug" 형상 한정 컴파일 옵션, 링크 옵션
+SET ( CMAKE_C_FLAGS_DEBUG "-DDEBUG -DC_FLAGS" )
+SET ( CMAKE_EXE_LINKER_FLAGS_DEBUG "-DDEBUG -DLINKER_FLAGS" )
+ 
+# "Release" 형상 한정 컴파일 옵션, 링크 옵션
+SET ( CMAKE_C_FLAGS_RELEASE "-DRELEASE -DC_FLAGS" )
+SET ( CMAKE_EXE_LINKER_FLAGS_RELEASE "-DRELEASE -DLINKER_FLAGS" )
+ 
+# 출력 디렉토리
+SET ( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BUILD_TYPE} )
+SET ( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BUILD_TYPE}/lib )
+SET ( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BUILD_TYPE}/lib )
+ 
+# 빌드 대상 바이너리 추가
+ADD_EXECUTABLE( ${OUTPUT_ELF} ${SRC_FILES} )
+```
